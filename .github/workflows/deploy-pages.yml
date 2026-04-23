@@ -1,0 +1,60 @@
+name: Deploy site from website.zip
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unpack website.zip
+        run: |
+          set -euo pipefail
+          rm -rf extracted _site
+          mkdir -p extracted _site
+          unzip -q website.zip -d extracted
+
+          if [ -f extracted/index.html ]; then
+            cp -a extracted/. _site/
+          elif [ -f extracted/Website/index.html ]; then
+            cp -a extracted/Website/. _site/
+          else
+            INDEX_DIR="$(dirname "$(find extracted -type f -name index.html | head -n 1)")"
+            if [ -z "$INDEX_DIR" ] || [ "$INDEX_DIR" = "." ]; then
+              echo "Could not find index.html inside website.zip"
+              exit 1
+            fi
+            cp -a "$INDEX_DIR"/. _site/
+          fi
+
+          test -f _site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
