@@ -1,4 +1,4 @@
-name: Deploy site from website.zip
+name: Deploy GitHub Pages from repository
 
 on:
   push:
@@ -21,27 +21,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Unpack website.zip
+      # Pages must match what is on main (hub, games/, play/, etc.). An old workflow
+      # only unpacked website.zip, so paths like /play/ never updated when you pushed files.
+      - name: Assemble site for Pages
         run: |
           set -euo pipefail
-          rm -rf extracted _site
-          mkdir -p extracted _site
-          unzip -q website.zip -d extracted
-
-          if [ -f extracted/index.html ]; then
-            cp -a extracted/. _site/
-          elif [ -f extracted/Website/index.html ]; then
-            cp -a extracted/Website/. _site/
-          else
-            INDEX_DIR="$(dirname "$(find extracted -type f -name index.html | head -n 1)")"
-            if [ -z "$INDEX_DIR" ] || [ "$INDEX_DIR" = "." ]; then
-              echo "Could not find index.html inside website.zip"
-              exit 1
+          rm -rf _site
+          mkdir -p _site
+          cp -a index.html styles.css script.js _site/
+          for d in games play showcase story; do
+            if [ -d "$d" ]; then
+              cp -a "$d" _site/
             fi
-            cp -a "$INDEX_DIR"/. _site/
-          fi
-
+          done
           test -f _site/index.html
+          test -f _site/games/voxel/index.html
+          test -f _site/games/zombie/index.html
+          test -f _site/play/index.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
