@@ -129,6 +129,14 @@ function setLoadingState(isLoading, key) {
     return;
   }
   setPlayerEnabled(true);
+  // Hosted hub: Mindcraft “session” is an explainer iframe, not the real launcher.
+  if (key === "mindcraft" && !IS_LOCAL_RUNTIME) {
+    fullBtn.disabled = true;
+    if (focusBtn) focusBtn.disabled = true;
+    if (openHere) openHere.disabled = true;
+    openTab.setAttribute("aria-disabled", "false");
+    openTab.setAttribute("href", "http://127.0.0.1:43110/");
+  }
 }
 
 async function canReach(url) {
@@ -144,19 +152,40 @@ async function loadGame(key) {
   const url = GAME_URLS[key];
   if (!url || !playerFrame || isSwitchingGame) return;
   if (key === "mindcraft" && !IS_LOCAL_RUNTIME) {
-    playerFrame.src = "about:blank";
-    playerTitle.textContent = "Mindcraft is local-only";
+    isSwitchingGame = true;
+    const requestId = ++loadRequestId;
+    if (autoStartTimer) {
+      window.clearInterval(autoStartTimer);
+      autoStartTimer = null;
+    }
+    window.clearTimeout(loadTimeoutId);
+    setLoadingState(true, key);
+
+    const wasSwitching = !!activeGame && activeGame !== key;
+    if (wasSwitching) {
+      teardownCaptureModes();
+      playerFrame.src = "about:blank";
+      await new Promise((resolve) => window.setTimeout(resolve, 60));
+      if (requestId !== loadRequestId) {
+        isSwitchingGame = false;
+        return;
+      }
+    }
+
+    activeGame = key;
+    playerFrame.src = "./mindcraft-info.html";
+    playerTitle.textContent = "Mindcraft (local launcher)";
     if (playerHint) {
       playerHint.hidden = false;
-      playerHint.textContent = "Mindcraft requires a local runtime and is unavailable on hosted pages.";
+      playerHint.textContent =
+        "Mindcraft runs as a Node server on your PC (127.0.0.1:43110). It cannot load inside this HTTPS page; use Open tab if the server is running locally.";
     }
-    openTab.setAttribute("href", "https://github.com/");
-    stopBtn.disabled = true;
-    fullBtn.disabled = true;
-    if (focusBtn) focusBtn.disabled = true;
-    if (openHere) openHere.disabled = true;
+    openTab.setAttribute("href", "http://127.0.0.1:43110/");
+    openTab.setAttribute("title", "Opens your machine’s localhost — only works if Mindcraft is already running.");
     openTab.setAttribute("aria-disabled", "false");
-    showToast("Mindcraft is available only on localhost.");
+    setLoadingState(false, key);
+    showToast("Mindcraft: local-only — see panel.");
+    isSwitchingGame = false;
     return;
   }
   isSwitchingGame = true;
@@ -452,13 +481,6 @@ for (const btn of document.querySelectorAll("[data-play]")) {
       document.querySelector(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   });
-}
-
-if (!IS_LOCAL_RUNTIME) {
-  for (const btn of document.querySelectorAll("[data-play='mindcraft']")) {
-    btn.disabled = true;
-    btn.title = "Mindcraft is local-only";
-  }
 }
 
 // Optional auto-boot: only when explicitly requested via ?game=...&autostart=1

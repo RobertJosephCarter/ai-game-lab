@@ -28,7 +28,7 @@ jobs:
           set -euo pipefail
           rm -rf _site
           mkdir -p _site
-          cp -a index.html styles.css script.js _site/
+          cp -a index.html styles.css script.js mindcraft-info.html _site/
           for d in games play showcase story; do
             if [ -d "$d" ]; then
               cp -a "$d" _site/
@@ -38,6 +38,7 @@ jobs:
           test -f _site/games/voxel/index.html
           test -f _site/games/zombie/index.html
           test -f _site/play/index.html
+          test -f _site/mindcraft-info.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
