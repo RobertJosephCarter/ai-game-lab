@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minecraft Inspired Clone</title>
+    <style>
+      html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+      #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; font-family: monospace; }
+      #crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; }
+      #crosshair::before, #crosshair::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); }
+      #crosshair::before { width: 2px; height: 24px; left: 11px; top: 0; }
+      #crosshair::after { width: 24px; height: 2px; top: 11px; left: 0; }
+      #hotbar { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+      .slot { position: relative; width: 44px; height: 44px; border: 2px solid #8f8f8f; background: rgba(0, 0, 0, 0.7); display: flex; align-items: center; justify-content: center; cursor: pointer; pointer-events: auto; }
+      .slot.active { border-color: #fff; }
+      .slot .icon { width: 32px; height: 32px; image-rendering: pixelated; background-image: url('./textures/minecraft-atlas.png'); background-size: 1600% 300%; background-repeat: no-repeat; background-position: calc(var(--tile-x) * 100% / 15) calc(var(--tile-y) * 100% / 2); }
+      .slot small { position: absolute; bottom: 2px; right: 3px; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 0 #000; }
+      #overlay { position: absolute; top: 8px; left: 8px; white-space: pre-line; }
+      #inventory { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 420px; padding: 12px; background: rgba(0,0,0,0.9); display: none; grid-template-columns: repeat(9, 1fr); gap: 6px; pointer-events: auto; }
+      #inventory.visible { display: grid; }
+      .inv-slot { border: 1px solid #aaa; height: 40px; display: grid; place-items: center; }
+      #crafting { position: absolute; right: 8px; top: 8px; width: 180px; background: rgba(0,0,0,0.7); padding: 8px; font-size: 12px; }
+      #chat { position: absolute; bottom: 80px; left: 8px; width: 400px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; font-size: 13px; pointer-events: none; }
+      #chat .msg { background: rgba(0,0,0,0.4); padding: 2px 4px; }
+      #chat-input { position: absolute; bottom: 56px; left: 8px; width: 400px; display: none; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #888; padding: 4px; font-family: monospace; font-size: 13px; outline: none; }
+      #chat-input.visible { display: block; }
+      #health-bar, #hunger-bar {
+        position: absolute;
+        bottom: 75px;
+        display: flex;
+        gap: 1px;
+        pointer-events: none;
+      }
+      #health-bar { left: calc(50% - 182px / 2 - 10px); transform: translateX(-50%); }
+      #hunger-bar { right: calc(50% - 182px / 2 - 10px); transform: translateX(50%); }
+      .heart, .hunger {
+        width: 9px;
+        height: 9px;
+        display: inline-block;
+      }
+      .heart { background: #cc0000; clip-path: polygon(50% 85%, 0% 35%, 15% 0%, 50% 20%, 85% 0%, 100% 35%); }
+      .heart.empty { background: #444; }
+      .heart.half { background: linear-gradient(to right, #cc0000 50%, #444 50%); clip-path: polygon(50% 85%, 0% 35%, 15% 0%, 50% 20%, 85% 0%, 100% 35%); }
+      .hunger { background: #8B6914; clip-path: polygon(50% 0%, 65% 35%, 100% 35%, 75% 55%, 85% 90%, 50% 70%, 15% 90%, 25% 55%, 0% 35%, 35% 35%); }
+      .hunger.empty { background: #444; }
+      .hunger.half { background: linear-gradient(to right, #8B6914 50%, #444 50%); clip-path: polygon(50% 0%, 65% 35%, 100% 35%, 75% 55%, 85% 90%, 50% 70%, 15% 90%, 25% 55%, 0% 35%, 35% 35%); }
+      #xp-bar {
+        position: absolute;
+        bottom: 68px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 182px;
+        height: 5px;
+        background: #222;
+        border: 1px solid #000;
+        pointer-events: none;
+      }
+      #xp-bar .fill {
+        height: 100%;
+        background: #80ff20;
+        transition: width 0.3s;
+      }
+      #xp-bar .level {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 11px;
+        color: #80ff20;
+        text-shadow: 1px 1px 0 #000;
+      }
+      #title-screen {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(180deg, #4a90d9 0%, #1a3a5c 50%, #2d1a0e 51%, #1a0e05 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        font-family: 'Courier New', monospace;
+        color: white;
+        image-rendering: pixelated;
+      }
+      #title-screen.hidden { display: none; }
+      #title-screen h1 {
+        font-size: 48px;
+        text-shadow: 3px 3px 0 #3f3f00, -1px -1px 0 #000;
+        color: #ffff00;
+        margin-bottom: 40px;
+        letter-spacing: 3px;
+      }
+      #title-screen h1 span { color: #aaa; font-size: 20px; display: block; text-shadow: none; }
+      .menu-btn {
+        width: 280px;
+        padding: 10px 0;
+        margin: 6px;
+        background: #555;
+        border: 2px solid #999;
+        color: white;
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        cursor: pointer;
+        text-align: center;
+      }
+      .menu-btn:hover { background: #6a6a6a; border-color: #fff; }
+      #title-worlds, #title-new-world {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #title-worlds.hidden, #title-new-world.hidden, #title-main.hidden { display: none; }
+      #world-list {
+        width: 320px;
+        max-height: 280px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+      }
+      .world-item {
+        background: rgba(0,0,0,0.5);
+        border: 2px solid #777;
+        padding: 10px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .world-item:hover { border-color: #fff; background: rgba(60,60,60,0.6); }
+      .world-item .name { font-weight: bold; font-size: 15px; }
+      .world-item .info { font-size: 11px; color: #aaa; margin-top: 2px; }
+      .world-item .delete-btn {
+        background: #822;
+        border: 1px solid #a44;
+        color: #fff;
+        padding: 2px 8px;
+        cursor: pointer;
+        font-family: monospace;
+      }
+      .world-item .delete-btn:hover { background: #a33; }
+      #pause-screen {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.65);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 90;
+        font-family: 'Courier New', monospace;
+        color: white;
+      }
+      #pause-screen.hidden { display: none; }
+      #pause-screen h2 { font-size: 28px; margin-bottom: 20px; }
+      #death-screen {
+        position: fixed;
+        inset: 0;
+        background: rgba(200, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 95;
+        font-family: 'Courier New', monospace;
+        color: white;
+      }
+      #death-screen.hidden { display: none; }
+      #death-screen h2 { font-size: 36px; color: #ff4444; }
+      /* Item name popup when switching hotbar slots */
+      #item-name-popup {
+        position: absolute;
+        bottom: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+        background: rgba(0,0,0,0.45);
+        padding: 3px 10px;
+        border-radius: 3px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        white-space: nowrap;
+      }
+      /* Non-block item icons */
+      .slot .icon.item-icon {
+        background-image: none !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+        font-style: normal;
+      }
+      /* Crafting panel improvement */
+      #crafting {
+        max-height: 360px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+      }
+    </style>
+    <script type="module" crossorigin src="./assets/index-qOYM0w2Y.js"></script>
+  </head>
+  <body>
+    <div id="title-screen">
+      <div id="title-main">
+        <h1>MINECRAFT CLONE<span>Browser Edition v0.2</span></h1>
+        <button class="menu-btn" id="btn-singleplayer">Singleplayer</button>
+        <button class="menu-btn" id="btn-creative">Creative Mode</button>
+      </div>
+      <div id="title-worlds" class="hidden">
+        <h2>Select World</h2>
+        <div id="world-list"></div>
+        <button class="menu-btn" id="btn-create-world">Create New World</button>
+        <button class="menu-btn" id="btn-back-title">Back</button>
+      </div>
+      <div id="title-new-world" class="hidden">
+        <h2>Create New World</h2>
+        <p style="margin: 8px 0;">World Name:</p>
+        <input type="text" id="new-world-name" value="New World" style="width: 260px; padding: 8px; font-family: monospace; font-size: 14px; margin-bottom: 12px;" />
+        <p style="margin: 8px 0;">Seed (optional):</p>
+        <input type="text" id="new-world-seed" placeholder="random" style="width: 260px; padding: 8px; font-family: monospace; font-size: 14px; margin-bottom: 12px;" />
+        <br>
+        <button class="menu-btn" id="btn-start-new">Create World</button>
+        <button class="menu-btn" id="btn-back-worlds">Cancel</button>
+      </div>
+    </div>
+    <div id="pause-screen" class="hidden">
+      <h2>Game Paused</h2>
+      <button class="menu-btn" id="btn-resume">Back to Game</button>
+      <button class="menu-btn" id="btn-save-quit">Save & Quit to Title</button>
+    </div>
+    <div id="death-screen" class="hidden">
+      <h2>You Died!</h2>
+      <p id="death-message"></p>
+      <button class="menu-btn" id="btn-respawn">Respawn</button>
+    </div>
+    <div id="app"></div>
+    <div id="hud">
+      <div id="crosshair"></div>
+      <div id="overlay"></div>
+      <div id="hotbar"></div>
+      <div id="inventory"></div>
+      <div id="crafting"></div>
+      <div id="chat"></div>
+      <input id="chat-input" type="text" autocomplete="off" />
+      <div id="health-bar"></div>
+      <div id="hunger-bar"></div>
+      <div id="xp-bar"></div>
+      <div id="item-name-popup"></div>
+    </div>
+  </body>
+</html>

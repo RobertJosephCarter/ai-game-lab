@@ -1,73 +1,300 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DeadTakeover — Zombie Open World Game</title>
-    <script type="module" crossorigin src="./assets/index-AQDbHIiM.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CwQOCu1d.css">
-  </head>
-  <body>
-    <div id="app">
-      <canvas id="game"></canvas>
-      <div id="sky-vignette"></div>
-      <div id="menu-overlay">
-        <div class="menu-card">
-          <h1 id="menu-title">DeadTakeover</h1>
-          <p id="menu-subtitle">Survive the open world with your team.</p>
-          <div id="map-select" class="map-select">
-            <div class="map-select-label">Choose map</div>
-            <div id="map-grid" class="map-grid"></div>
-          </div>
-          <div class="menu-actions">
-            <button id="btn-start">Start Game</button>
-            <button id="btn-continue" class="is-hidden">Continue Run</button>
-            <button id="btn-resume" class="is-hidden">Resume</button>
-            <button id="btn-restart" class="is-hidden">Restart Run</button>
-            <button id="btn-audio">Audio: On</button>
-          </div>
-            <p class="menu-help">WASD Move · Shift Sprint · C Crouch · Space Jump · Click/LMB Shoot · RMB Aim Down Sights · R Reload · 1-7 Weapon Slots · Q/E Swap Weapon · G Grenade · J Molotov · K Land Mine · L Spike Trap · V Noise Maker · F Melee Knife / Enter Vehicle · B Build Barricade · N Switch Build Type · U Weapon Upgrade Bench · Tab Inventory · T Team Swap · P Pause · M Audio. Scavenge materials from zombies! Craft items at your inventory! Build wood/metal barricades! Upgrade weapons at benches! Watch for ★ Supply Drops! Special Zombies: Spitter (acid), Hunter (pounces), Charger (charges), Crawler (low)! Corpses revive if not headshot!</p>
-          <p class="menu-credits">Buildings &amp; street atlas: Kenney.nl (CC0). Pistol GLB: Webaverse (github.com/webaverse/pistol). Music: Kevin MacLeod (incompetech.com) — Title: Floating Cities; maps + Outbreak City: Movement Proposition, Darkest Child, Frost Waltz, Crossing the Chasm, Volatile Reaction, District Four. CC BY — see incompetech.com.</p>
-        </div>
-      </div>
-      <div id="hud">
-        <div id="hud-left">
-          <div class="panel-title">Survivor Status</div>
-          <div class="bar-wrap"><span>Health</span><div class="bar"><div id="health-fill" class="bar-fill health"></div></div></div>
-          <div class="bar-wrap"><span>Stamina</span><div class="bar"><div id="stamina-fill" class="bar-fill stamina"></div></div></div>
-          <div class="meta" id="stats-meta">Ammo: 20/100 | Kills: 0 | Zombies: 0</div>
-          <div class="meta" id="extra-meta">Grenades: 3 | NoiseMakers: 2 | Score: 0</div>
-          <div class="meta" id="skill-meta">Skills: None</div>
-        </div>
-        <div id="hud-right">
-          <div class="panel-title">Minimap</div>
-          <canvas id="minimap" width="180" height="180"></canvas>
-          <div id="world-stats">Wave 1 | 00:00</div>
-        </div>
-        <div id="top-center-alert"></div>
-        <div id="message">WASD move, Shift sprint, mouse look, click shoot, R reload.</div>
-      </div>
-      <div id="crosshair"></div>
-      <div id="hit-marker"></div>
-      <div id="damage-flash"></div>
-      <div id="kill-streak-display"></div>
-      <div id="night-indicator"></div>
-      <div id="build-hint"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI Game Lab: a colorful interactive hub for your playable game experiments." />
+  <meta name="theme-color" content="#0a1022" />
+  <title>AI Game Lab</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;650;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="topbar" role="banner">
+    <div class="topbar-inner">
+      <a class="brand" href="#top" aria-label="AI Game Lab Home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">AI Game Lab</span>
+      </a>
+
+      <nav class="nav" aria-label="Site">
+        <a href="#showcase">Showcase</a>
+        <a href="#play">Play</a>
+        <a href="#story">Story</a>
+      </nav>
+
+      <button id="themeBtn" class="btn ghost" type="button" aria-label="Toggle theme">Theme</button>
     </div>
-    <div id="upgrade-bench" class="upgrade-bench-overlay is-hidden">
-      <div class="upgrade-bench-card">
-        <h2>Weapon Upgrade Bench</h2>
-        <p class="upgrade-bench-subtitle">Select a weapon to upgrade using scavenged materials.</p>
-        <div id="upgrade-weapon-list" class="upgrade-weapon-list"></div>
-        <div id="upgrade-details" class="upgrade-details is-hidden">
-          <div class="upgrade-weapon-name" id="upgrade-weapon-name"></div>
-          <div class="upgrade-grid" id="upgrade-grid"></div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero glow-shell">
+      <div class="hero-grid reveal">
+        <div class="hero-copy reveal">
+          <p class="pill">Built with AI collaboration</p>
+          <h1>We are building
+            <span class="grad">playable worlds</span>
+            together.
+          </h1>
+          <p class="lead">
+            This hub is not a portfolio. It is a live showcase of what we designed with AI: gameplay systems, worlds,
+            tools, and experiments you can run right now inside one website.
+          </p>
+          <div class="hero-actions">
+            <a class="btn primary" href="#play">Launch game hub</a>
+            <a class="btn ghost" href="#showcase">See creations</a>
+          </div>
+          <div class="chips" aria-label="Project categories">
+            <span class="chip">Playable in-browser</span>
+            <span class="chip">AI co-designed</span>
+            <span class="chip">System-heavy games</span>
+          </div>
         </div>
-        <div class="upgrade-bench-actions">
-          <button id="upgrade-bench-close">Close</button>
+        <div class="hero-art reveal" aria-hidden="true">
+          <div class="card-float neon-a">
+            <div class="card-float-inner">
+              <p class="mini">Inside this lab</p>
+              <ul>
+                <li>Explore game architecture</li>
+                <li>Launch worlds inline</li>
+                <li>Run local stacks quickly</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </body>
+    </section>
+
+    <section id="showcase" class="section">
+      <h2 class="section-title">AI Built Showcase</h2>
+      <p class="section-sub">Three different game systems, each designed and iterated with AI-assisted workflows.</p>
+
+      <div class="grid">
+        <article class="game reveal neon-a" data-title="Cursor Minecraft Clone Game">
+          <header class="game-head">
+            <div>
+              <p class="kicker">01 • Voxel Sandbox</p>
+              <h3>CraftVerse Engine</h3>
+            </div>
+            <div class="game-actions">
+              <span class="badge">Chunks + Survival</span>
+              <button class="btn ghost small" type="button" data-play="voxel" data-scroll="#run">Play</button>
+            </div>
+          </header>
+
+          <p class="desc">
+            A Minecraft-inspired sandbox where AI helped shape systems for world generation, block interactions,
+            survival loops, inventory, and multiplayer-ready architecture.
+          </p>
+
+          <div class="cols">
+            <div>
+              <p class="label">Core systems</p>
+              <ul class="bullets">
+                <li>Procedural chunk generation</li>
+                <li>Block break/place + inventory loop</li>
+                <li>Foundation for crafting + mobs</li>
+              </ul>
+            </div>
+            <div>
+              <p class="label">Feel</p>
+              <ul class="bullets">
+                <li>Creative + survival progression</li>
+                <li>Responsive input loop</li>
+                <li>Browser-first 3D experimentation</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="meta"><strong>Stack:</strong> Vite, Three.js, noise, ws</p>
+        </article>
+
+        <article class="game reveal neon-b" data-title="Kimi k2.6 Mindcraft">
+          <header class="game-head">
+            <div>
+              <p class="kicker">02 • AI Launcher</p>
+              <h3>Mindcraft Control Deck</h3>
+            </div>
+            <div class="game-actions">
+              <span class="badge">Automation</span>
+              <button class="btn ghost small" type="button" data-play="mindcraft" data-scroll="#run">Run</button>
+              <a class="btn ghost small" href="http://127.0.0.1:43110" target="_blank" rel="noreferrer">Open</a>
+            </div>
+          </header>
+
+          <p class="desc">
+            A local launcher/control surface combining Java runtime setup, profile handling, and AI bot management in one
+            operational panel.
+          </p>
+
+          <div class="cols">
+            <div>
+              <p class="label">What it manages</p>
+              <ul class="bullets">
+                <li>Java and runtime orchestration</li>
+                <li>Launcher UI + profile lifecycle</li>
+                <li>Agent install/start/stop flow</li>
+              </ul>
+            </div>
+            <div>
+              <p class="label">Purpose</p>
+              <ul class="bullets">
+                <li>Bring tools into one control plane</li>
+                <li>Fast local experiments with AI agents</li>
+                <li>Better ops for game-side iteration</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="meta"><strong>Stack:</strong> Node, Express, launcher-core</p>
+        </article>
+
+        <article class="game reveal neon-c" data-title="Zombie Open World Game DeadTakeover">
+          <header class="game-head">
+            <div>
+              <p class="kicker">03 • Open-World FPS</p>
+              <h3>DeadTakeover Protocol</h3>
+            </div>
+            <div class="game-actions">
+              <span class="badge">Horde Survival</span>
+              <button class="btn ghost small" type="button" data-play="zombie" data-scroll="#run">Play</button>
+            </div>
+          </header>
+
+          <p class="desc">
+            A browser zombie survival FPS with map progression, special infected, team dynamics, crafting,
+            barricades, and escalating horde pressure.
+          </p>
+
+          <div class="cols">
+            <div>
+              <p class="label">Combat ecosystem</p>
+              <ul class="bullets">
+                <li>Map selection with varied conditions</li>
+                <li>Special enemy archetypes</li>
+                <li>Build + scavenge + survive loops</li>
+              </ul>
+            </div>
+            <div>
+              <p class="label">Session style</p>
+              <ul class="bullets">
+                <li>Squad-aware survival pacing</li>
+                <li>Resource-driven decisions</li>
+                <li>High-intensity close combat</li>
+              </ul>
+            </div>
+          </div>
+
+          <p class="meta"><strong>Stack:</strong> Vite, Three.js, Web Audio, Canvas HUD</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="play" class="section">
+      <h2 id="run" class="section-title">Play Inside The Hub</h2>
+      <p class="section-sub">
+        Launch each build directly below. Runtime integrations are preserved and isolated so switching sessions is safer.
+        Mindcraft still requires its local server process first.
+      </p>
+
+      <div class="player reveal" aria-label="Embedded game player">
+        <div class="player-bar">
+          <div class="player-status">
+            <p class="label">Live Session</p>
+            <p id="playerTitle" class="player-title">Choose a game to start</p>
+          </div>
+
+          <div class="player-actions">
+            <button class="btn ghost small" type="button" data-play="voxel">Voxel</button>
+            <button class="btn ghost small" type="button" data-play="zombie">Zombie</button>
+            <button class="btn ghost small" type="button" data-play="mindcraft">Mindcraft</button>
+            <button id="stopBtn" class="btn ghost small" type="button" disabled>Stop</button>
+            <button id="fullBtn" class="btn ghost small" type="button" disabled>Fullscreen</button>
+            <button id="focusBtn" class="btn ghost small" type="button" disabled>Focus</button>
+            <button id="openHere" class="btn ghost small" type="button" disabled>Open here</button>
+            <a id="openTab" class="btn ghost small" href="#" target="_blank" rel="noreferrer" aria-disabled="true">Open tab</a>
+          </div>
+        </div>
+
+        <div class="player-frame">
+          <iframe
+            id="playerFrame"
+            title="Embedded game"
+            loading="eager"
+            tabindex="0"
+            autofocus
+            allowfullscreen
+            allow="autoplay; fullscreen; gamepad; pointer-lock"
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
+        <p id="playerHint" class="player-hint" hidden>
+          Tip: click inside the game to capture mouse/keyboard. Press Esc to release.
+        </p>
+      </div>
+
+      <div class="run-grid">
+        <article class="run-card reveal neon-a">
+          <header class="run-head">
+            <h3>Run CraftVerse (dev)</h3>
+            <button class="btn ghost small" type="button" data-copy="#cmd-voxel">Copy</button>
+          </header>
+          <pre id="cmd-voxel"><code>cd "../Cursor Minecraft Clone Game"
+bash scripts/setup.sh
+bash scripts/launch.sh</code></pre>
+        </article>
+
+        <article class="run-card reveal neon-b">
+          <header class="run-head">
+            <h3>Run Mindcraft Deck</h3>
+            <button class="btn ghost small" type="button" data-copy="#cmd-mindcraft">Copy</button>
+          </header>
+          <pre id="cmd-mindcraft"><code>cd "../Kimi k2.6 mindcraft/Kimi k2.6 mindcraft"
+npm install
+npm start</code></pre>
+          <p class="hint">Then open <a href="http://127.0.0.1:43110" target="_blank" rel="noreferrer">http://127.0.0.1:43110</a></p>
+        </article>
+
+        <article class="run-card reveal neon-c">
+          <header class="run-head">
+            <h3>Run DeadTakeover (dev)</h3>
+            <button class="btn ghost small" type="button" data-copy="#cmd-zombie">Copy</button>
+          </header>
+          <pre id="cmd-zombie"><code>cd "../Zombie Open World Game/Zombie Open World Game"
+npm install
+npm run dev</code></pre>
+        </article>
+      </div>
+    </section>
+
+    <section id="story" class="section">
+      <h2 class="section-title">What This Website Represents</h2>
+      <div class="about reveal">
+        <p>
+          This site showcases what we have designed with AI: mechanics, systems, UX choices, and playable prototypes.
+          It is a live creative lab where ideas move quickly from prompt to playable world.
+        </p>
+        <ul class="bullets">
+          <li>Use the Play panel to load each experience safely.</li>
+          <li>Theme preference is remembered in your browser.</li>
+          <li>For best results, run this website on localhost.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>AI Game Lab — design, test, and ship playable ideas.</p>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="./script.js"></script>
+</body>
 </html>
