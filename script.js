@@ -23,6 +23,24 @@ themeBtn.addEventListener("click", () => {
   applyTheme(body.classList.contains("light") ? "dark" : "light");
 });
 
+// Scroll-to-top button
+const scrollTopBtn = document.getElementById("scrollTop");
+if (scrollTopBtn) {
+  let stTicking = false;
+  window.addEventListener("scroll", () => {
+    if (!stTicking) {
+      window.requestAnimationFrame(() => {
+        scrollTopBtn.hidden = window.scrollY < 300;
+        stTicking = false;
+      });
+      stTicking = true;
+    }
+  });
+  scrollTopBtn.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
 function showToast(message) {
   if (!toast) return;
   toast.textContent = message;
@@ -45,6 +63,25 @@ if ("IntersectionObserver" in window) {
   revealItems.forEach((el) => io.observe(el));
 } else {
   revealItems.forEach((el) => el.classList.add("in"));
+}
+
+// Active nav section highlighting
+const navLinks$$ = document.querySelectorAll(".nav a");
+const navSections = [...document.querySelectorAll("section[id]")];
+if ("IntersectionObserver" in window && navLinks$$.length) {
+  const navIo = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          navLinks$$.forEach((link) => {
+            link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+          });
+        }
+      }
+    },
+    { threshold: 0.3, rootMargin: "-80px 0px -20% 0px" }
+  );
+  navSections.forEach((s) => navIo.observe(s));
 }
 
 // Copy buttons
@@ -84,6 +121,7 @@ const IS_LOCAL_RUNTIME = ["127.0.0.1", "localhost"].includes(window.location.hos
 const playerFrame = document.getElementById("playerFrame");
 const playerTitle = document.getElementById("playerTitle");
 const playerHint = document.getElementById("playerHint");
+const playerLoader = document.getElementById("playerLoader");
 const stopBtn = document.getElementById("stopBtn");
 const fullBtn = document.getElementById("fullBtn");
 const focusBtn = document.getElementById("focusBtn");
@@ -118,6 +156,9 @@ function teardownCaptureModes() {
 }
 
 function setLoadingState(isLoading, key) {
+  if (playerLoader) {
+    playerLoader.classList.toggle("is-hidden", !isLoading);
+  }
   if (isLoading) {
     stopBtn.disabled = false;
     fullBtn.disabled = true;
@@ -129,6 +170,14 @@ function setLoadingState(isLoading, key) {
     return;
   }
   setPlayerEnabled(true);
+  // Hosted hub: Mindcraft “session” is an explainer iframe, not the real launcher.
+  if (key === "mindcraft" && !IS_LOCAL_RUNTIME) {
+    fullBtn.disabled = true;
+    if (focusBtn) focusBtn.disabled = true;
+    if (openHere) openHere.disabled = true;
+    openTab.setAttribute("aria-disabled", "false");
+    openTab.setAttribute("href", "http://127.0.0.1:43110/");
+  }
 }
 
 async function canReach(url) {
@@ -144,19 +193,40 @@ async function loadGame(key) {
   const url = GAME_URLS[key];
   if (!url || !playerFrame || isSwitchingGame) return;
   if (key === "mindcraft" && !IS_LOCAL_RUNTIME) {
-    playerFrame.src = "about:blank";
-    playerTitle.textContent = "Mindcraft is local-only";
+    isSwitchingGame = true;
+    const requestId = ++loadRequestId;
+    if (autoStartTimer) {
+      window.clearInterval(autoStartTimer);
+      autoStartTimer = null;
+    }
+    window.clearTimeout(loadTimeoutId);
+    setLoadingState(true, key);
+
+    const wasSwitching = !!activeGame && activeGame !== key;
+    if (wasSwitching) {
+      teardownCaptureModes();
+      playerFrame.src = "about:blank";
+      await new Promise((resolve) => window.setTimeout(resolve, 60));
+      if (requestId !== loadRequestId) {
+        isSwitchingGame = false;
+        return;
+      }
+    }
+
+    activeGame = key;
+    playerFrame.src = "./mindcraft-info.html";
+    playerTitle.textContent = "Mindcraft (local launcher)";
     if (playerHint) {
       playerHint.hidden = false;
-      playerHint.textContent = "Mindcraft requires a local runtime and is unavailable on hosted pages.";
+      playerHint.textContent =
+        "Mindcraft runs as a Node server on your PC (127.0.0.1:43110). It cannot load inside this HTTPS page; use Open tab if the server is running locally.";
     }
-    openTab.setAttribute("href", "https://github.com/");
-    stopBtn.disabled = true;
-    fullBtn.disabled = true;
-    if (focusBtn) focusBtn.disabled = true;
-    if (openHere) openHere.disabled = true;
+    openTab.setAttribute("href", "http://127.0.0.1:43110/");
+    openTab.setAttribute("title", "Opens your machine’s localhost — only works if Mindcraft is already running.");
     openTab.setAttribute("aria-disabled", "false");
-    showToast("Mindcraft is available only on localhost.");
+    setLoadingState(false, key);
+    showToast("Mindcraft: local-only — see panel.");
+    isSwitchingGame = false;
     return;
   }
   isSwitchingGame = true;
@@ -248,6 +318,7 @@ function stopGame() {
     window.clearInterval(autoStartTimer);
     autoStartTimer = null;
   }
+  if (playerLoader) playerLoader.classList.add("is-hidden");
   teardownCaptureModes();
   activeGame = null;
   isSwitchingGame = false;
@@ -452,13 +523,6 @@ for (const btn of document.querySelectorAll("[data-play]")) {
       document.querySelector(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   });
-}
-
-if (!IS_LOCAL_RUNTIME) {
-  for (const btn of document.querySelectorAll("[data-play='mindcraft']")) {
-    btn.disabled = true;
-    btn.title = "Mindcraft is local-only";
-  }
 }
 
 // Optional auto-boot: only when explicitly requested via ?game=...&autostart=1

@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 
 ROOT_DIR="$(pwd)"
 PROJECTS_DIR="$(cd "$ROOT_DIR/.." && pwd)"
-MINDCRAFT_DIR="$PROJECTS_DIR/Kimi k2.6 mindcraft/Kimi k2.6 mindcraft"
+MINDCRAFT_DIR="$ROOT_DIR/games/Kimi k2.6 mindcraft"
 MINDCRAFT_URL="http://127.0.0.1:43110/"
 MINDCRAFT_PID=""
 

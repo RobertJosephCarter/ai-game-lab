@@ -39,7 +39,10 @@ body.light {
   box-sizing: border-box;
 }
 
-html,
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-height: 100%;
@@ -144,10 +147,18 @@ a, button, input { font: inherit; }
   border-radius: 999px;
   padding: 0.35rem 0.7rem;
   font-size: 0.9rem;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
 .nav a:hover {
   border-color: color-mix(in oklab, var(--accent), white 16%);
+}
+
+.nav a.active {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent), transparent 80%);
+  color: var(--accent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--accent), transparent 70%);
 }
 
 main {
@@ -289,6 +300,11 @@ h1 {
 
 .section {
   margin-top: 1.6rem;
+  scroll-margin-top: 5rem;
+}
+
+#top {
+  scroll-margin-top: 0;
 }
 
 .section-title {
@@ -479,6 +495,37 @@ body.js .reveal.in {
   transform: translateX(-50%) translateY(-3px);
 }
 
+.scroll-top {
+  position: fixed;
+  bottom: 1.3rem;
+  right: 1.3rem;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--panel-2), transparent 4%);
+  color: var(--text);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.2s ease;
+}
+
+.scroll-top:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.scroll-top[hidden] {
+  display: grid;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+}
+
 @keyframes drift {
   from { transform: translate(-2%, -2%) scale(1); }
   to { transform: translate(2%, 2%) scale(1.05); }
@@ -557,7 +604,42 @@ body.js .reveal.in {
 }
 
 .player-frame {
+  position: relative;
   background: color-mix(in oklab, var(--panel), transparent 8%);
+}
+
+.player-loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  z-index: 2;
+  background: color-mix(in oklab, var(--panel), transparent 4%);
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.player-loader.is-hidden {
+  opacity: 0;
+}
+
+.player-loader p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .player-frame iframe {
