@@ -424,6 +424,33 @@
             gap: 12px;
             flex-wrap: wrap;
         }
+        .hero-stats {
+            margin-top: 8px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            max-width: 520px;
+        }
+        .stat {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 10px 12px;
+        }
+        .stat strong {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            line-height: 1.1;
+            color: var(--text-primary);
+        }
+        .stat span {
+            color: var(--text-muted);
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+        }
         .btn {
             display: inline-flex;
             align-items: center;
@@ -565,6 +592,44 @@
             max-width: 600px;
             line-height: 1.6;
         }
+        .showcase-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: inline-flex;
+            gap: 6px;
+            padding: 4px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .filter-btn {
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 7px 13px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all var(--transition-fast);
+        }
+        .filter-btn:hover {
+            color: var(--text-primary);
+        }
+        .filter-btn.active {
+            color: var(--text-primary);
+            border-color: var(--border-card);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .results-note {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
 
         /* ── Grid ── */
         .grid {
@@ -588,6 +653,9 @@
             position: relative;
             overflow: hidden;
             cursor: default;
+        }
+        .game.is-hidden {
+            display: none;
         }
         .game::before {
             content: '';
@@ -963,6 +1031,22 @@
             pointer-events: none;
             transform: translateY(12px);
         }
+        .menu-toggle {
+            display: none;
+            border: 1px solid var(--border-subtle);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .menu-toggle span {
+            font-size: 1.1rem;
+            line-height: 1;
+        }
 
         /* ── Toast ── */
         .toast {
@@ -1017,6 +1101,10 @@
 
         /* ── Responsive ── */
         @media (max-width: 900px) {
+            .hero-stats {
+                grid-template-columns: 1fr;
+                max-width: 100%;
+            }
             .hero-grid {
                 grid-template-columns: 1fr;
                 gap: 30px;
@@ -1043,16 +1131,34 @@
             }
             .nav {
                 gap: 2px;
+                display: none;
+                position: absolute;
+                top: calc(var(--header-h) - 6px);
+                right: 16px;
+                flex-direction: column;
+                min-width: 190px;
+                padding: 8px;
+                border: 1px solid var(--border-card);
+                border-radius: 12px;
+                background: var(--bg-surface);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+            }
+            .nav.open {
+                display: flex;
             }
             .nav a {
-                padding: 6px 10px;
+                padding: 8px 10px;
                 font-size: 0.8rem;
+                border-radius: 10px;
             }
             .topbar-inner {
                 gap: 12px;
             }
             .brand-name {
                 display: none;
+            }
+            .menu-toggle {
+                display: inline-flex;
             }
         }
         @media (max-width: 500px) {
@@ -1099,6 +1205,9 @@
                 <a href="#play">Play</a>
                 <a href="#story">Story</a>
             </nav>
+            <button id="menuToggle" class="menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="siteNav">
+                <span></span><span></span><span></span>
+            </button>
 
             <button id="themeBtn" class="btn ghost" type="button" aria-label="Toggle theme" style="padding:0;width:38px;height:38px;border-radius:50%;">
                 <span class="icon-sun" aria-hidden="true">☀️</span>
@@ -1129,6 +1238,20 @@
                         <span class="chip">AI co-designed</span>
                         <span class="chip">System-heavy games</span>
                     </div>
+                    <div class="hero-stats" aria-label="Site highlights">
+                        <div class="stat">
+                            <strong>3</strong>
+                            <span>Playable worlds</span>
+                        </div>
+                        <div class="stat">
+                            <strong>1 Hub</strong>
+                            <span>Unified launcher</span>
+                        </div>
+                        <div class="stat">
+                            <strong>Live</strong>
+                            <span>Iterating daily</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="hero-art reveal" aria-hidden="true">
                     <div class="card-float neon-a">
@@ -1148,9 +1271,17 @@
         <section id="showcase" class="section">
             <h2 class="section-title">AI Built Showcase</h2>
             <p class="section-sub">Three different game systems, each designed and iterated with AI-assisted workflows.</p>
+            <div class="showcase-tools" role="region" aria-label="Showcase filters">
+                <div class="filter-group" role="tablist" aria-label="Filter cards">
+                    <button class="filter-btn active" type="button" data-filter="all" role="tab" aria-selected="true">All</button>
+                    <button class="filter-btn" type="button" data-filter="playable" role="tab" aria-selected="false">Playable</button>
+                    <button class="filter-btn" type="button" data-filter="tools" role="tab" aria-selected="false">Tools</button>
+                </div>
+                <p id="resultsNote" class="results-note" aria-live="polite">Showing all projects</p>
+            </div>
 
             <div class="grid">
-                <article class="game reveal neon-a" data-title="Cursor Minecraft Clone Game">
+                <article class="game reveal neon-a" data-title="Cursor Minecraft Clone Game" data-category="playable">
                     <header class="game-head">
                         <div>
                             <p class="kicker">01 • Voxel Sandbox</p>
@@ -1189,7 +1320,7 @@
                     <p class="meta"><strong>Stack:</strong> Vite, Three.js, noise, ws</p>
                 </article>
 
-                <article class="game reveal neon-b" data-title="Kimi k2.6 Mindcraft">
+                <article class="game reveal neon-b" data-title="Kimi k2.6 Mindcraft" data-category="tools">
                     <header class="game-head">
                         <div>
                             <p class="kicker">02 • AI Launcher</p>
@@ -1229,7 +1360,7 @@
                     <p class="meta"><strong>Stack:</strong> Node, Express, launcher-core</p>
                 </article>
 
-                <article class="game reveal neon-c" data-title="Zombie Open World Game DeadTakeover">
+                <article class="game reveal neon-c" data-title="Zombie Open World Game DeadTakeover" data-category="playable">
                     <header class="game-head">
                         <div>
                             <p class="kicker">03 • Open-World FPS</p>
