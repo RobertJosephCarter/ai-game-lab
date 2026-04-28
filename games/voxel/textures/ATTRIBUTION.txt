@@ -1,0 +1,6 @@
+Atlas textures derived from Pixel-Perfection texture pack
+Source: https://github.com/minetest-texture-packs/Pixel-Perfection
+License: CC-BY-SA-4.0 (Creative Commons Attribution-ShareAlike 4.0)
+Author: Hugh "XSSheep" Rutland and contributors
+
+This atlas is a derivative work and is also licensed CC-BY-SA-4.0.

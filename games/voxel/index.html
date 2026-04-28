@@ -3,17 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Minecraft Inspired Clone</title>
-    <script type="module" crossorigin src="./assets/index-DWfSlLKJ.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CrLVXzJw.css">
+    <title>Cubeworld - Browser Voxel Adventure</title>
+    <script type="module" crossorigin src="./assets/index-BpRqJl-U.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-dMGAU-yX.css">
   </head>
   <body>
     <!-- Title Screen -->
     <div id="title-screen">
       <div id="title-main">
-        <h1>MINECRAFT CLONE<span>Browser Edition v0.2</span></h1>
-        <button class="menu-btn" id="btn-singleplayer">Singleplayer</button>
+        <h1>CUBEWORLD<span>A voxel adventure · v0.3</span></h1>
+        <button class="menu-btn" id="btn-singleplayer">Play</button>
         <button class="menu-btn" id="btn-creative">Creative Mode</button>
+        <div class="title-hint">WASD move · Space jump · E inventory · Esc menu</div>
       </div>
       <div id="title-worlds" class="hidden">
         <h2>Select World</h2>
@@ -37,7 +38,30 @@
     <div id="pause-screen" class="hidden">
       <h2>Game Paused</h2>
       <button class="menu-btn" id="btn-resume">Back to Game</button>
+      <button class="menu-btn" id="btn-settings">Settings</button>
       <button class="menu-btn" id="btn-save-quit">Save &amp; Quit to Title</button>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="hidden">
+      <h2>Settings</h2>
+      <div class="settings-group">
+        <label>Render Distance: <span id="settings-rd-value">6</span> chunks</label>
+        <input type="range" id="settings-render-distance" min="2" max="12" value="6" step="1" />
+      </div>
+      <div class="settings-group">
+        <label>FOV: <span id="settings-fov-value">75</span></label>
+        <input type="range" id="settings-fov" min="50" max="110" value="75" step="1" />
+      </div>
+      <div class="settings-group">
+        <label>Volume: <span id="settings-vol-value">100</span>%</label>
+        <input type="range" id="settings-volume" min="0" max="100" value="100" step="5" />
+      </div>
+      <div class="settings-group">
+        <label>Mouse Sensitivity: <span id="settings-sens-value">100</span>%</label>
+        <input type="range" id="settings-sensitivity" min="20" max="300" value="100" step="10" />
+      </div>
+      <button class="menu-btn" id="btn-settings-back">Back</button>
     </div>
 
     <!-- Death Screen -->
@@ -70,6 +94,12 @@
 
     <!-- Bow Charge Bar -->
     <div id="bow-charge"><div id="bow-charge-fill"></div></div>
+
+    <!-- Underwater Overlay -->
+    <div id="underwater-overlay"></div>
+
+    <!-- Air Bubbles Bar -->
+    <div id="air-bar"></div>
 
     <!-- Visual Effects -->
     <div id="damage-vignette"></div>
