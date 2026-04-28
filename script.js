@@ -116,6 +116,7 @@ const GAME_URLS = {
   zombie: "./games/zombie/index.html",
   mindcraft: "http://127.0.0.1:43110/"
 };
+const EMBED_CACHE_KEY = "_v";
 const IS_LOCAL_RUNTIME = ["127.0.0.1", "localhost"].includes(window.location.hostname);
 
 const playerFrame = document.getElementById("playerFrame");
@@ -189,9 +190,23 @@ async function canReach(url) {
   }
 }
 
+function withCacheBust(url) {
+  try {
+    const resolved = new URL(url, window.location.href);
+    resolved.searchParams.set(EMBED_CACHE_KEY, String(Date.now()));
+    if (resolved.origin === window.location.origin) {
+      return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    }
+    return resolved.toString();
+  } catch {
+    return url;
+  }
+}
+
 async function loadGame(key) {
-  const url = GAME_URLS[key];
-  if (!url || !playerFrame || isSwitchingGame) return;
+  const baseUrl = GAME_URLS[key];
+  if (!baseUrl || !playerFrame || isSwitchingGame) return;
+  const sessionUrl = key === "mindcraft" ? baseUrl : withCacheBust(baseUrl);
   if (key === "mindcraft" && !IS_LOCAL_RUNTIME) {
     isSwitchingGame = true;
     const requestId = ++loadRequestId;
@@ -242,7 +257,7 @@ async function loadGame(key) {
 
   if (key === "mindcraft") {
     showToast("Opening Mindcraft…");
-    const ok = await canReach(url);
+    const ok = await canReach(baseUrl);
     if (requestId !== loadRequestId) {
       isSwitchingGame = false;
       return;
@@ -255,7 +270,7 @@ async function loadGame(key) {
         playerHint.hidden = false;
         playerHint.textContent = "Start Mindcraft with npm start, then press Mindcraft again. You can also use Open tab.";
       }
-      openTab.setAttribute("href", url);
+      openTab.setAttribute("href", baseUrl);
       stopBtn.disabled = true;
       fullBtn.disabled = true;
       if (focusBtn) focusBtn.disabled = true;
@@ -285,7 +300,7 @@ async function loadGame(key) {
   }
 
   activeGame = key;
-  playerFrame.src = url;
+  playerFrame.src = sessionUrl;
   playerTitle.textContent =
     key === "voxel" ? "Voxel game (embedded)" : key === "zombie" ? "Zombie FPS (embedded)" : "Mindcraft launcher (local)";
 
@@ -298,7 +313,7 @@ async function loadGame(key) {
         : "Booting… the website will auto-start the game. If controls feel stuck, click once anywhere.";
   }
 
-  openTab.setAttribute("href", url);
+  openTab.setAttribute("href", sessionUrl);
   armCaptureForSession();
   loadTimeoutId = window.setTimeout(() => {
     if (requestId !== loadRequestId || activeGame !== key) return;
